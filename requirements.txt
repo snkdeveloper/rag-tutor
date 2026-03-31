@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+langchain
+langchain-openai
+langchain-community
+langchain-text-splitters
+faiss-cpu
+pypdf
+python-multipart
+python-dotenv
+sqlalchemy
+pyjwt
+bcrypt
+passlib
+
