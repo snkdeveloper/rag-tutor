@@ -20,7 +20,7 @@ from .database import get_db, User, UserRole
 from .document_loader import UPLOADS_DIR, load_and_chunk
 from .jwt_utils import create_access_token
 from .password_utils import hash_password, verify_password
-from .rag import answer_question
+from .rag import answer_question, answer_question_with_llm_only
 from .vector_store import add_documents
 
 
@@ -68,6 +68,7 @@ class AuthResponse(BaseModel):
 
 class ChatRequest(BaseModel):
     question: str
+    llm_fallback: bool = False
 
 
 def _load_documents_meta() -> List[dict]:
@@ -252,6 +253,15 @@ async def chat(
             detail="Question must not be empty.",
         )
 
+    # Check for user consent for LLM fallback
+    llm_fallback = getattr(request, "llm_fallback", False)
+
     result = answer_question(question)
+
+    # If fallback is available and user consents, use LLM only
+    if result.get("llm_fallback_available") and getattr(request, "llm_fallback", False):
+        llm_result = answer_question_with_llm_only(question)
+        return JSONResponse(content=llm_result)
+
     return JSONResponse(content=result)
 

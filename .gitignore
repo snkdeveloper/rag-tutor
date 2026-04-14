@@ -32,3 +32,8 @@ yarn-error.log*
 
 # Large generated vector index
 backend/faiss_index/index.faiss
+
+# Backend runtime/generated artifacts
+backend/faiss_index/*.pkl
+backend/users.db
+backend/uploads/

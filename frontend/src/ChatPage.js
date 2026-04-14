@@ -37,6 +37,39 @@ const ChatPage = ({
       );
       const data = res.data;
 
+      if (data.llm_fallback_available) {
+        const consentMessage = data.llm_fallback_disclaimer ||
+          "This answer is not in the course materials. Do you want an AI-generated fallback answer?";
+
+        const disclaimerMessage = {
+          role: "assistant",
+          content: consentMessage,
+          sources: [],
+        };
+        setMessages((prev) => [...prev, disclaimerMessage]);
+
+        const consent = window.confirm(consentMessage);
+        if (consent) {
+          const fallbackRes = await axios.post(
+            `${API_BASE}/chat`,
+            { question: trimmed, llm_fallback: true },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          const fallbackData = fallbackRes.data;
+          const fallbackAnswerMessage = {
+            role: "assistant",
+            content: `${fallbackData.llm_fallback_disclaimer}\n\n${fallbackData.answer}`,
+            sources: [],
+          };
+          setMessages((prev) => [...prev, fallbackAnswerMessage]);
+        }
+        return;
+      }
+
       const answerMessage = {
         role: "assistant",
         content: data.answer,

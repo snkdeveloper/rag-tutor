@@ -1,6 +1,6 @@
 # RAG Tutoring System
 
-A minimal **Retrieval-Augmented Generation (RAG)** tutoring app: teachers upload course documents; students ask questions and get answers grounded only in those materials, with citations.
+A  **Retrieval-Augmented Generation (RAG)** tutoring app: teachers upload course documents; students ask questions and get answers grounded only in those materials, with citations.
 
 ## Features
 
@@ -21,20 +21,39 @@ A minimal **Retrieval-Augmented Generation (RAG)** tutoring app: teachers upload
 ## Project Structure
 
 ```
+.
+  AUTHENTICATION.md      # Auth notes / flows
+  requirements.txt       # Backend Python deps
+  test_endpoints.py      # API smoke tests
+  rag_from_scratch_*.py  # RAG experimentation scripts
+
 backend/
-  main.py           # FastAPI app, routes
-  rag.py            # RAG pipeline (retrieve + generate)
-  document_loader.py# PDF/text loading, chunking
-  vector_store.py   # FAISS index
-  auth.py           # Teacher token check
-  uploads/          # Uploaded files (created at runtime)
-  faiss_index/      # Vector DB (created on first upload)
+  main.py             # FastAPI app + routes
+  rag.py              # RAG pipeline (retrieve + generate)
+  document_loader.py  # PDF/text loading, chunking
+  vector_store.py     # FAISS index helpers
+  auth.py             # Teacher token check
+  database.py         # SQLite models / session
+  jwt_utils.py        # JWT helpers
+  password_utils.py   # Password hashing/verify
+  documents.json      # Example/seed docs metadata
+  users.db            # SQLite DB (created at runtime)
+  uploads/            # Uploaded files
+  faiss_index/        # FAISS index files
 
 frontend/
   src/
     App.js
-    UploadPage.js   # Teacher upload UI
-    ChatPage.js     # Student chat UI
+    AuthContext.js
+    ChatPage.js
+    UploadPage.js
+    SignIn.js
+    SignUp.js
+    ForgotPassword.js
+    RoleSelection.js
+    SelectRole.js
+    index.js
+    index.css
 ```
 
 ## Prerequisites
@@ -81,8 +100,13 @@ cd ..
 
 ```bash
 source .venv/bin/activate
-uvicorn backend.main:app --reload --port 8000
+python -m uvicorn backend.main:app --reload --port 8000
 ```
+
+Notes:
+
+- Use an unprivileged port like `8000` (ports `<1024` such as `800` may fail with `Permission denied` on macOS/Linux).
+- If you see `command not found: uvicorn`, it usually means the virtualenv isn’t active; the `python -m uvicorn ...` form above ensures the venv-installed `uvicorn` is used.
 
 **Terminal 2 – Frontend**
 
@@ -93,6 +117,27 @@ cd frontend && npm start
 - App: [http://localhost:3000](http://localhost:3000)
 - API: [http://localhost:8000](http://localhost:8000)
 - Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+## Troubleshooting
+
+### ERROR: `[Errno 13] Permission denied`
+
+You likely tried to bind to a privileged port (e.g. `--port 800`). Use `--port 8000` (or any port `>= 1024`).
+
+### ERROR: `[Errno 48] Address already in use`
+
+Something is already running on that port. Either stop the existing process, or choose another port:
+
+```bash
+python -m uvicorn backend.main:app --reload --port 8001
+```
+
+To find and kill the process using port 8000 (macOS/Linux):
+
+```bash
+lsof -i :8000
+kill -9 <PID>
+```
 
 ## Environment Variables
 
